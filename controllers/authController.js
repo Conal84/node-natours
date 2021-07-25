@@ -4,6 +4,7 @@ const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
+// Sign a JWT === create a JWT as string
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
@@ -15,9 +16,11 @@ exports.signup = catchAsync(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
+    role: req.body.role,
   });
 
   // Payload
+  // Sign JWT and send back to user to login them in on signup
   const token = signToken(newUser._id);
 
   res.status(201).json({
@@ -38,7 +41,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // 2) Check if user exists and password is correct
-  // In the User model the password select is et to false to hide it from the client as a default
+  // In the User model the password select is set to false to hide it from the client as a default
   // In this case we want access to the password so we explicitly select is and pass +password
   const user = await User.findOne({ email }).select('+password');
 
@@ -46,7 +49,7 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Incorrect email or password', 401));
   }
 
-  // 3) If everything ok send token to client
+  // 3) If everything ok send token to client for this particular user
   const token = signToken(user._id);
 
   res.status(200).json({
@@ -73,9 +76,50 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   // 2) Validate / verfiy the token
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET)
-    // 3) Check if user exists
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
-    // 4) Check if user changed passwords after token was issued
-    .next();
+  // 3) Check if user exists
+  const freshUser = await User.findById(decoded.id);
+  if (!freshUser) {
+    return next(
+      new AppError('The user belonging to this token no longer exists', 401)
+    );
+  }
+
+  // 4) Check if user changed passwords after token was issued
+  if (freshUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError('User recently changed password. Please log in again.', 401)
+    );
+  }
+
+  // If we make it this far grant access to the protected route
+  req.user = freshUser;
+  next();
 });
+
+exports.restrictTo =
+  (...roles) =>
+  (req, res, next) => {
+    // roles is array of user types ['admin', 'lead-guide']
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
+    }
+    next();
+  };
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  // 1) Get user based on POSTed email
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(new AppError('There is no used with that email address', 404));
+  }
+  // 2) Generate random token
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  // 3) Send it to users email
+});
+exports.resetPassword = (req, res, next) => {};
