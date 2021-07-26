@@ -37,8 +37,8 @@ const userSchema = new mongoose.Schema({
       validator: function (el) {
         return el === this.password;
       },
+      message: 'Passwords are not the same',
     },
-    message: 'Passwords are not the same',
   },
   passwordChangedAt: Date,
   passwordResetToken: String,
@@ -54,6 +54,14 @@ userSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(this.password, 12);
   // Delete password confirm field as only needed to check passwords match
   this.passwordConfirm = undefined;
+  next();
+});
+
+// middleware to check if password is modified and to set passwordChangedAt timestamp
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
   next();
 });
 
