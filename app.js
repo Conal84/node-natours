@@ -19,6 +19,7 @@ const limiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   message: 'Too many requests from this IP, please try again in an hour',
 });
+app.use('/api', limiter); // use the limiter middleware function on routes with /api
 
 app.use(express.json()); // Needed for populating req.body
 app.use(express.static(`${__dirname}/public`));
