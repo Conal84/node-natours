@@ -43,6 +43,11 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false, // hides in any output
+  },
 });
 
 // middleware password encryption function
@@ -62,6 +67,13 @@ userSchema.pre('save', function (next) {
   if (!this.isModified('password') || this.isNew) return next();
 
   this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
+// Before any find query filter for active != false only
+userSchema.pre(/^find/, function (next) {
+  // this points to current query
+  this.find({ active: { $ne: false } });
   next();
 });
 
