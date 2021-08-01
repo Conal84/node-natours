@@ -1,19 +1,28 @@
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const sanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
 
 const app = express();
 // 1) GLOABL MIDDLEWARES
-// Middleware HTTP request logger
+// Set security HTTP headers
+app.use(helmet());
+
+// Middleware HTTP request logger for development
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// Limit requests from the same API
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
@@ -21,11 +30,36 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter); // use the limiter middleware function on routes with /api
 
-app.use(express.json()); // Needed for populating req.body
+// Body parser, Needed for populating req.body
+app.use(express.json({ limit: '10kb' }));
+
+// Data sanitization against NoSQL query injection
+// Filters out dollar signs and dots to prevent query injection
+app.use(sanitize());
+
+// Data sanitization against XSS
+app.use(xss());
+
+// Prevent HTTP parameter pollution
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'ratingsAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  })
+);
+
+// Serving statis files
 app.use(express.static(`${__dirname}/public`));
 
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/user', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 // Handle unhandled routes and send a json response from our API
 // app.all works for get, post, patch, etc requests

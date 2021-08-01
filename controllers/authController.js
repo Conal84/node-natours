@@ -60,7 +60,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
   // 2) Check if user exists and password is correct
   // In the User model the password select is set to false to hide it from the client as a default
-  // In this case we want access to the password so we explicitly select is and pass +password
+  // In this case we want access to the password so we explicitly select it and pass +password
   const user = await User.findOne({ email }).select('+password');
 
   if (!user || !(await user.correctPassword(password, user.password))) {
