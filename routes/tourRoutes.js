@@ -1,10 +1,24 @@
 const express = require('express');
 const tourController = require('../controllers/tourController');
 const authController = require('../controllers/authController');
+const reviewRouter = require('./reviewRoutes');
+// const reviewController = require('../controllers/reviewController');
 
 const router = express.Router();
 
 // router.param('id', tourController.checkID);
+
+// A way of nesting routes from one router in another
+// router
+//   .route('/:tourId/reviews')
+//   .post(
+//     authController.protect,
+//     authController.restrictTo('user'),
+//     reviewController.createReview
+//   );
+
+// For this specific path use the reviewRouter
+router.use('/:tourId/reviews', reviewRouter);
 
 // Aliasing
 // Create a bookmarked route so its easy for the user to search this route
@@ -19,6 +33,7 @@ router
   .route('/')
   .get(authController.protect, tourController.getAllTours) // Restricted - access to users only
   .post(tourController.createTour);
+
 router
   .route('/:id')
   .get(tourController.getTour)
