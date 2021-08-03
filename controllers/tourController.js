@@ -2,7 +2,6 @@
 const Tour = require('../models/tourModel');
 const APIFeatures = require('../utils/apiFeatures');
 const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
 const factory = require('./handlerFactory');
 
 // Middleware to manipulate the req query before it goes to getAllTours
@@ -59,6 +58,8 @@ exports.getTour = catchAsync(async (req, res, next) => {
   });
 });
 
+// exports.getTour = factory.getOne(Tour, 'reviews');
+
 // Middleware function to check body
 // exports.checkBody = (req, res, next) => {
 //   console.log(req.body);
@@ -71,7 +72,7 @@ exports.getTour = catchAsync(async (req, res, next) => {
 //   next();
 // };
 
-exports.createTour = factory.CreateOne(Tour);
+exports.createTour = factory.createOne(Tour);
 
 // exports.createTour = catchAsync(async (req, res, next) => {
 //   const newTour = await Tour.create(req.body);
