@@ -1,5 +1,6 @@
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const APIFeatures = require('../utils/apiFeatures');
 
 // A function which takes a model arg
 // And returns the async function
@@ -48,7 +49,7 @@ exports.createOne = (Model) =>
     });
   });
 
-exports.getOne = (Model, popOptions) => {
+exports.getOne = (Model, popOptions) =>
   catchAsync(async (req, res, next) => {
     let query = Model.findById(req.params.id);
     if (popOptions) query = query.populate(popOptions);
@@ -65,4 +66,27 @@ exports.getOne = (Model, popOptions) => {
       },
     });
   });
-};
+
+exports.getAll = (Model) =>
+  catchAsync(async (req, res, next) => {
+    // Filter reviews by tourId
+    let filter = {};
+    if (req.params.tourId) filter = { tour: req.params.tourId };
+
+    // EXECUTE THE QUERY
+    const features = new APIFeatures(Model.find(filter), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    const docs = await features.query;
+
+    // SEND RESPONSE
+    res.status(200).json({
+      status: 'success',
+      results: docs.length,
+      data: {
+        data: docs,
+      },
+    });
+  });
