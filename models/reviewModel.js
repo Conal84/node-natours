@@ -40,6 +40,9 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
+// Prevent the same user making a review for the same tour
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+
 // Query Middleware
 // populate the referenced tour and user data for every review query that begins with 'find'
 reviewSchema.pre(/^find/, function (next) {
