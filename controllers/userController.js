@@ -29,6 +29,12 @@ const filterObj = (obj, ...allowedFields) => {
 
 exports.getAllUsers = factory.getAll(User);
 
+// Middleware function to set params id to user id
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
+
 // Update the currently authenticated user
 exports.updateMe = catchAsync(async (req, res, next) => {
   // Create error if user POSTs password data

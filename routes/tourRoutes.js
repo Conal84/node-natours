@@ -29,15 +29,20 @@ router
 
 router.route('/tour-stats').get(tourController.getTourStats);
 
-router
-  .route('/')
-  .get(authController.protect, tourController.getAllTours) // Restricted - access to users only
-  .post(tourController.createTour);
+router.route('/').get(tourController.getAllTours).post(
+  authController.protect,
+  authController.restrictTo('admin', 'lead-guide'), // Restricted - access to certain users only
+  tourController.createTour
+);
 
 router
   .route('/:id')
   .get(tourController.getTour)
-  .patch(tourController.updateTour)
+  .patch(
+    authController.protect,
+    authController.restrictTo('admin', 'lead-guide'),
+    tourController.updateTour
+  ) // Restricted - access to certain users only
   .delete(
     authController.protect,
     authController.restrictTo('admin', 'lead-guide'),
