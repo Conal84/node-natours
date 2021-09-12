@@ -105,6 +105,10 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
+// Index to improve DB search efficiency
+tourSchema.index({ price: 1 }); // 1 - ascending order, -1 - descending order
+tourSchema.index({ slug: 1 });
+
 // Virtual properties
 // Are not stored in the database, are only calculated when we get the data from the DB
 tourSchema.virtual('durationWeeks').get(function () {
