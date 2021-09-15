@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 // const User = require('./userModel');
 // const validator = require('validator');
 
@@ -12,6 +13,7 @@ const tourSchema = new mongoose.Schema(
       maxlength: [40, 'A tour name must be less than or equal to 40 chars'],
       minlength: [10, 'A tour name must be greater than or equal to 10 chars'],
     },
+    slug: String,
     duration: {
       type: Number,
       required: [true, 'A tour must have a duration'],
@@ -122,6 +124,12 @@ tourSchema.virtual('reviews', {
   ref: 'Review',
   foreignField: 'tour',
   localField: '_id',
+});
+
+// DOCUMENT MIDDLEWARE: runs before .save() and .create() DOES NOT WORK for FindByIdAndUpdate for example
+tourSchema.pre('save', function (next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
 });
 
 // tourSchema.pre('save', async function (next) {
