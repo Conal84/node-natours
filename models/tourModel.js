@@ -143,7 +143,7 @@ tourSchema.pre('save', function (next) {
 tourSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'guides',
-    select: '-__v -passwordChangedAt',
+    select: '-__v -passwordChangedAt', // use minus to deselect certain fields from the populate
   });
   next();
 });
