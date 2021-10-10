@@ -31,6 +31,7 @@ app.use(helmet());
 const scriptSrcUrls = [
   'https://api.tiles.mapbox.com/',
   'https://api.mapbox.com/',
+  'https://cdnjs.cloudflare.com',
 ];
 const styleSrcUrls = [
   'https://api.mapbox.com/',
