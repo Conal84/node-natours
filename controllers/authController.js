@@ -72,6 +72,7 @@ exports.login = catchAsync(async (req, res, next) => {
 });
 
 // Protect middleware function to validate token and grant / deny access
+// Tokens are sent by either authorisation header or cookies
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) Get the token and check it exists
   let token;
@@ -80,6 +81,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
 
   if (!token) {
@@ -108,6 +111,35 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // If we make it this far grant access to the protected route
   req.user = freshUser;
+  next();
+});
+
+// Check a user is looged in to then render certain info in pug template
+exports.isLoggedIn = catchAsync(async (req, res, next) => {
+  // 1) Check it jwt exists in cookie
+  if (req.cookies.jwt) {
+    // 2) Validate / verfiy the token
+    const decoded = await promisify(jwt.verify)(
+      req.cookies.jwt,
+      process.env.JWT_SECRET
+    );
+
+    // 3) Check if user exists
+    const freshUser = await User.findById(decoded.id);
+    if (!freshUser) {
+      return next();
+    }
+
+    // 4) Check if user changed passwords after token was issued
+    if (freshUser.changedPasswordAfter(decoded.iat)) {
+      return next();
+    }
+
+    // If we make it this then there is a logged in User
+    // Every pug template gets access to res.locals
+    res.locals.user = freshUser;
+    return next();
+  }
   next();
 });
 
