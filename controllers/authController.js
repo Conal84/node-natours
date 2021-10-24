@@ -71,6 +71,15 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+// To log out set the cookie to some dummy text
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'loggedOut', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({ status: 'success' });
+};
+
 // Protect middleware function to validate token and grant / deny access
 // Tokens are sent by either authorisation header or cookies
 exports.protect = catchAsync(async (req, res, next) => {
@@ -115,33 +124,37 @@ exports.protect = catchAsync(async (req, res, next) => {
 });
 
 // Check a user is looged in to then render certain info in pug template
-exports.isLoggedIn = catchAsync(async (req, res, next) => {
+exports.isLoggedIn = async (req, res, next) => {
   // 1) Check it jwt exists in cookie
   if (req.cookies.jwt) {
-    // 2) Validate / verfiy the token
-    const decoded = await promisify(jwt.verify)(
-      req.cookies.jwt,
-      process.env.JWT_SECRET
-    );
+    try {
+      // 2) Validate / verfiy the token
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      );
 
-    // 3) Check if user exists
-    const freshUser = await User.findById(decoded.id);
-    if (!freshUser) {
+      // 3) Check if user exists
+      const freshUser = await User.findById(decoded.id);
+      if (!freshUser) {
+        return next();
+      }
+
+      // 4) Check if user changed passwords after token was issued
+      if (freshUser.changedPasswordAfter(decoded.iat)) {
+        return next();
+      }
+
+      // If we make it this then there is a logged in User
+      // Every pug template gets access to res.locals
+      res.locals.user = freshUser;
+      return next();
+    } catch (err) {
       return next();
     }
-
-    // 4) Check if user changed passwords after token was issued
-    if (freshUser.changedPasswordAfter(decoded.iat)) {
-      return next();
-    }
-
-    // If we make it this then there is a logged in User
-    // Every pug template gets access to res.locals
-    res.locals.user = freshUser;
-    return next();
   }
   next();
-});
+};
 
 exports.restrictTo =
   (...roles) =>
