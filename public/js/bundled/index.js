@@ -464,7 +464,7 @@ var _mapbox = require("./mapbox");
 var _login = require("./login");
 // DOM ELEMENTS
 const mapBox = document.getElementById('map');
-const loginForm = document.querySelector('.form');
+const loginForm = document.querySelector('.form--login');
 const logOutBtn = document.querySelector('.nav__el--logout');
 if (mapBox) {
     const locations = JSON.parse(mapBox.dataset.locations);

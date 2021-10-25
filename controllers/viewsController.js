@@ -1,4 +1,5 @@
 const Tour = require('../models/tourModel');
+const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
@@ -47,3 +48,36 @@ exports.getLogin = (req, res, next) => {
       title: 'Log into your account',
     });
 };
+
+exports.getAccount = (req, res) => {
+  // 1) render the template, no need to query to database for the user, this has already been done in protect middleware
+  res
+    .status(200)
+    .set(
+      'Content-Security-Policy',
+      "connect-src 'self' https://cdnjs.cloudflare.com"
+    )
+    .render('account', {
+      title: 'Your account',
+    });
+};
+
+exports.updateUserData = catchAsync(async (req, res, next) => {
+  // Needs urlencoded parser in app.js to get data in req.body
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user.id,
+    {
+      name: req.body.name,
+      email: req.body.email,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  res.status(200).render('account', {
+    title: 'Your account',
+    user: updatedUser,
+  });
+});

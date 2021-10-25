@@ -77,6 +77,9 @@ app.use('/api', limiter); // use the limiter middleware function on routes with 
 // Body parser, Needed for populating req.body
 app.use(express.json({ limit: '10kb' }));
 
+// Allows us to parse data from a url encoded form
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
 // Cookie parser gives us access to cookies
 app.use(cookieParser());
 
