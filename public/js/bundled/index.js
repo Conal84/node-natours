@@ -482,12 +482,11 @@ if (loginForm) loginForm.addEventListener('submit', (e)=>{
 if (logOutBtn) logOutBtn.addEventListener('click', _login.logout);
 if (userDataForm) userDataForm.addEventListener('submit', (e)=>{
     e.preventDefault();
-    const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
-    _updateSettings.updateSettings({
-        name,
-        email
-    }, 'data');
+    const form = new FormData();
+    form.append('name', document.getElementById('name').value);
+    form.append('email', document.getElementById('email').value);
+    form.append('photo', document.getElementById('photo').files[0]);
+    _updateSettings.updateSettings(form, 'data');
 });
 if (userPasswordForm) userPasswordForm.addEventListener('submit', async (e)=>{
     e.preventDefault();
@@ -9259,7 +9258,12 @@ const updateSettings = async (data, type)=>{
             url,
             data
         });
-        if (res.data.status === 'success') _alerts.showAlert('success', `${type.toUpperCase()} updated successfully!`);
+        if (res.data.status === 'success') {
+            _alerts.showAlert('success', `${type.toUpperCase()} updated successfully!`);
+            window.setTimeout(()=>{
+                location.assign('/');
+            }, 1000);
+        }
     } catch (err) {
         _alerts.showAlert('error', err.response.data.message);
     }

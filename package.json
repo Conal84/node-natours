@@ -30,9 +30,11 @@
     "mongodb": "^3.6.10",
     "mongoose": "^5.13.2",
     "morgan": "^1.10.0",
+    "multer": "^1.4.3",
     "nodemailer": "^6.6.3",
     "parcel": "^2.0.0",
     "pug": "^3.0.2",
+    "sharp": "^0.29.2",
     "slugify": "^1.6.0",
     "validator": "^13.6.0",
     "xss-clean": "^0.1.1"
