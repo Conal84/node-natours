@@ -34,6 +34,7 @@ const scriptSrcUrls = [
   'https://api.tiles.mapbox.com/',
   'https://api.mapbox.com/',
   'https://cdnjs.cloudflare.com',
+  'https://js.stripe.com',
 ];
 const styleSrcUrls = [
   'https://api.mapbox.com/',
@@ -45,8 +46,10 @@ const connectSrcUrls = [
   'https://a.tiles.mapbox.com/',
   'https://b.tiles.mapbox.com/',
   'https://events.mapbox.com/',
+  'http://127.0.0.1:3000/api/v1/bookings/checkout-session/',
 ];
 const fontSrcUrls = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+const frameSrcUrls = ['https://js.stripe.com'];
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
@@ -58,6 +61,7 @@ app.use(
       objectSrc: [],
       imgSrc: ["'self'", 'blob:', 'data:'],
       fontSrc: ["'self'", ...fontSrcUrls],
+      frameSrc: ["'self'", ...frameSrcUrls],
     },
   })
 );
