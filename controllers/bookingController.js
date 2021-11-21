@@ -46,3 +46,9 @@ exports.createBookingCheckout = catchAsync(async (req, res, next) => {
   // success_url: `${req.protocol}://${req.get('host')}/?tour=${req.params.tourId}&user=${req.user.id}&price=${tour.price},
   res.redirect(req.originalUrl.split('?')[0]);
 });
+
+exports.createBooking = factory.createOne(Booking);
+exports.getBooking = factory.getOne(Booking);
+exports.getAllBookings = factory.getAll(Booking);
+exports.updateBooking = factory.updateOne(Booking);
+exports.deleteBooking = factory.deleteOne(Booking);
