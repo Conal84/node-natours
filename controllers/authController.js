@@ -13,16 +13,16 @@ const signToken = (id) =>
   });
 
 // Create and send a response to the user with their token
-const createSendToken = (user, statusCode, res) => {
+const createSendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
   const cookieOptions = {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
     ),
     httpOnly: true, // Cookie can not be accessed or modified by the browser
+    secure: req.secure || req.headers['x-forwarded-proto'] === 'https', // Cookie is only sent on encrypted https connection
   };
 
-  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true; // Cookie is only sent on encrypted https connection
   res.cookie('jwt', token, cookieOptions);
 
   user.password = undefined; // hide the password in the response when sign up
@@ -52,7 +52,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 
   // Payload
   // Sign JWT and send back to user to login them in on signup
-  createSendToken(newUser, 201, res);
+  createSendToken(newUser, 201, req, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -73,7 +73,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // 3) If everything ok send token to client for this particular user
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
 
 // To log out set the cookie to some dummy text
@@ -234,7 +234,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   // 3) Update changedPassword property for the user
 
   // 4) Log the user in, send JWT
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
@@ -251,5 +251,5 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   // 4) Log user in, send JWT token to client
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
